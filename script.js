@@ -128,31 +128,10 @@ function getItemsFromStorage() {
   }
 }
 
-// function removeFromStorage(item) {
-//   const items = JSON.parse(getItemsFromStorage());
-//   delete items[item];
-//   saveToLocalStorage();
-// }
-
-// function displayItems() {
-//   const itemsRaw = getItemsFromStorage();
-//   if (itemsRaw === 0) {
-//     return;
-//   } else {
-//     const items = JSON.parse(itemsRaw);
-
-//     for (const task in items) {
-//       addTask(task, items[task]);
-//     }
-//   }
-// }
-
 initTaskList();
-// addTaskBtn.addEventListener('click', addTask);
 itemForm.addEventListener('submit', onSubmit);
 itemsList.addEventListener('click', delteItem);
 clearAllBtn.addEventListener('click', clearAll);
 filterInput.addEventListener('input', filter);
 itemsList.addEventListener('click', markDone);
-// document.addEventListener('DOMContentLoaded', displayItems);
 document.addEventListener('DOMContentLoaded', renderTaskList);
