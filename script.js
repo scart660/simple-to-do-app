@@ -5,35 +5,49 @@ const itemForm = document.querySelector('#item-form');
 const clearAllBtn = document.querySelector('#clear-all-button');
 const filterInput = document.querySelector('#filter');
 const checkbox = document.querySelector('.checkbox');
+const taskList = initTaskList();
 
-function onSubmit(e) {
-  e.preventDefault();
-  itemsRaw = getItemsFromStorage();
-  if (itemsRaw === 0) {
-    addTask(taskInput.value);
+function initTaskList() {
+  const items = getItemsFromStorage();
+  if (items === 0) {
+    return {};
   } else {
-    const items = JSON.parse(itemsRaw);
-    if (items[taskInput.value] !== undefined) {
-      alert('Already added item');
-      return;
-    }
-    addTask(taskInput.value);
+    return JSON.parse(items);
   }
 }
 
-function addTask(item, isChecked) {
-  const taskName = taskInput.value;
-  console.log(taskName);
-  const li = document.createElement('li');
-  li.appendChild(createCheckbox('checkbox', isChecked));
-  li.appendChild(document.createTextNode(item));
-  li.appendChild(createButton('delete-button'));
-  isChecked
-    ? (li.style.backgroundColor = 'green')
-    : (li.style.backgroundColor = 'white');
-  itemsList.appendChild(li);
-  saveToLocalStorage();
-  taskInput.value = '';
+function onSubmit(e) {
+  e.preventDefault();
+  addTask(taskInput.value);
+}
+
+function addTask(item) {
+  if (taskList[item] === undefined) {
+    taskList[item] = false;
+    saveToLocalStorage();
+    renderTaskList();
+    taskInput.value = '';
+  } else {
+    alert('Alrady added item');
+  }
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('items', JSON.stringify(taskList));
+}
+
+function renderTaskList() {
+  itemsList.innerHTML = '';
+  for (task in taskList) {
+    const li = document.createElement('li');
+    li.appendChild(createCheckbox('checkbox', taskList[task]));
+    li.appendChild(document.createTextNode(task));
+    li.appendChild(createButton('delete-button'));
+    taskList[task]
+      ? (li.style.backgroundColor = 'green')
+      : (li.style.backgroundColor = 'white');
+    itemsList.appendChild(li);
+  }
 }
 
 function createIcon(classes) {
@@ -60,10 +74,10 @@ function createButton(classes) {
 
 function delteItem(e) {
   if (e.target.parentElement.classList.contains('delete-button')) {
-    e.target.parentElement.parentElement.remove();
+    delete taskList[e.target.parentElement.parentElement.textContent];
+    saveToLocalStorage();
+    renderTaskList();
   }
-  console.log(e.target.parentElement.parentElement.textContent);
-  removeFromStorage(e.target.parentElement.parentElement.textContent);
 }
 
 function clearAll() {
@@ -86,55 +100,59 @@ function filter() {
 }
 
 function markDone(e) {
-  if (e.target.checked) {
-    e.target.parentElement.style.backgroundColor = 'green';
-  } else {
-    e.target.parentElement.style.backgroundColor = 'white';
+  if (e.target.classList.contains('checkbox')) {
+    const item = e.target.parentElement;
+    const itemName = item.textContent;
+    if (e.target.checked) {
+      taskList[itemName] = true;
+      e.target.parentElement.style.backgroundColor = 'green';
+      saveToLocalStorage();
+    } else {
+      e.target.parentElement.style.backgroundColor = 'white';
+      taskList[itemName] = false;
+      saveToLocalStorage();
+    }
   }
-}
-
-function saveToLocalStorage() {
-  const list = {};
-  const items = itemsList.querySelectorAll('li');
-  items.forEach((item) => {
-    itemCheckbox = item.querySelector('input');
-    list[item.textContent] = itemCheckbox.checked;
-  });
-  localStorage.setItem('items', JSON.stringify(list));
 }
 
 function getItemsFromStorage() {
   const items = localStorage.getItem('items');
-  if (items === null || items === undefined) {
+  if (
+    items === null ||
+    items === undefined ||
+    Object.keys(items).length === 0
+  ) {
     return 0;
   } else {
     return items;
   }
 }
 
-function removeFromStorage(item) {
-  const items = JSON.parse(getItemsFromStorage());
-  delete items[item];
-  saveToLocalStorage();
-}
+// function removeFromStorage(item) {
+//   const items = JSON.parse(getItemsFromStorage());
+//   delete items[item];
+//   saveToLocalStorage();
+// }
 
-function displayItems() {
-  const itemsRaw = getItemsFromStorage();
-  if (itemsRaw === 0) {
-    return;
-  } else {
-    const items = JSON.parse(itemsRaw);
+// function displayItems() {
+//   const itemsRaw = getItemsFromStorage();
+//   if (itemsRaw === 0) {
+//     return;
+//   } else {
+//     const items = JSON.parse(itemsRaw);
 
-    for (const task in items) {
-      addTask(task, items[task]);
-    }
-  }
-}
+//     for (const task in items) {
+//       addTask(task, items[task]);
+//     }
+//   }
+// }
 
+initTaskList();
 // addTaskBtn.addEventListener('click', addTask);
 itemForm.addEventListener('submit', onSubmit);
 itemsList.addEventListener('click', delteItem);
 clearAllBtn.addEventListener('click', clearAll);
 filterInput.addEventListener('input', filter);
 itemsList.addEventListener('click', markDone);
-document.addEventListener('DOMContentLoaded', displayItems);
+// document.addEventListener('DOMContentLoaded', displayItems);
+document.addEventListener('DOMContentLoaded', renderTaskList);
